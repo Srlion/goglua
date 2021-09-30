@@ -168,7 +168,7 @@ func GetErrorString(L State) string {
 func DumpStack(L State) {
 	top := GetTop(L)
 	fmt.Printf("=== Stack size: %v ===\n", top)
-	for i := 1; i < top; i++ {
+	for i := 1; i <= top; i++ {
 		t := GetType(L, i)
 		switch t {
 		case LUA_TSTRING:
