@@ -6,6 +6,7 @@ package glua
 */
 import "C"
 import (
+	"errors"
 	"fmt"
 	"runtime"
 	"unsafe"
@@ -81,7 +82,7 @@ func OpenLibs(L State) {
 
 func LoadString(L State, str string) error {
 	if lua_error_code := C.luaL_loadstring_wrap(luaL_loadstring, L, CStr(str).c); lua_error_code != 0 {
-		return fmt.Errorf(errorString(L))
+		return errors.New(GetErrorString(L))
 	}
 
 	return nil
@@ -115,6 +116,6 @@ func SetGlobal(L State, name string) {
 	C.lua_setfield_wrap(lua_setfield, L, LUA_GLOBALSINDEX, CStr(name).c)
 }
 
-func errorString(L State) string {
+func GetErrorString(L State) string {
 	return ToLString(L, -1)
 }
