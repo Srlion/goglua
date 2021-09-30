@@ -1,4 +1,4 @@
 {
-  global : gmod13_open; test;
-  local : * ;
+  global: gmod13_open; test;
+  local: * ;
 };
