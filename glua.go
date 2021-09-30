@@ -1,4 +1,4 @@
-package lua
+package glua
 
 /*
 #cgo LDFLAGS: -ldl
