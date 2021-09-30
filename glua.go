@@ -60,6 +60,7 @@ var handler unsafe.Pointer = func() unsafe.Pointer {
 var luaL_newstate = C.dlsym(handler, CStr("luaL_newstate").c)
 var luaL_openlibs = C.dlsym(handler, CStr("luaL_openlibs").c)
 var luaL_loadstring = C.dlsym(handler, CStr("luaL_loadstring").c)
+var luaL_loadbuffer = C.dlsym(handler, CStr("luaL_loadbuffer").c)
 var lua_pushlstring = C.dlsym(handler, CStr("lua_pushlstring").c)
 var lua_tolstring = C.dlsym(handler, CStr("lua_tolstring").c)
 var lua_gettop = C.dlsym(handler, CStr("lua_gettop").c)
@@ -82,6 +83,14 @@ func OpenLibs(L State) {
 
 func LoadString(L State, str string) error {
 	if lua_error_code := C.luaL_loadstring_wrap(luaL_loadstring, L, CStr(str).c); lua_error_code != 0 {
+		return errors.New(GetErrorString(L))
+	}
+
+	return nil
+}
+
+func LoadBuffer(L State, buf []byte, name string) error {
+	if lua_error_code := C.luaL_loadbuffer_wrap(luaL_loadbuffer, L, (*C.char)(unsafe.Pointer(&buf)), C.size_t(len(buf)), CStr(name).c); lua_error_code != 0 {
 		return errors.New(GetErrorString(L))
 	}
 

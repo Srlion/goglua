@@ -27,6 +27,12 @@ int luaL_loadstring_wrap(void *f, void *L, const char *s)
     return ((luaL_loadstring)f)(L, s);
 }
 
+typedef int (*luaL_loadbuffer)(void *L, const char *buff, size_t sz, const char *name);
+int luaL_loadbuffer_wrap(void *f, void *L, const char *buff, size_t sz, const char *name)
+{
+    return ((luaL_loadbuffer)f)(L, buff, sz, name);
+}
+
 typedef void (*lua_pushlstring)(void *L, const char *s, size_t len);
 void lua_pushlstring_wrap(void *f, void *L, const char *s, size_t len)
 {
