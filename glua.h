@@ -45,10 +45,34 @@ const char *lua_tolstring_wrap(void *f, void *L, int index, size_t *len)
     return ((lua_tolstring)f)(L, index, len);
 }
 
+typedef double (*lua_tonumber)(void *L, int index);
+double lua_tonumber_wrap(void *f, void *L, int index)
+{
+    return ((lua_tonumber)f)(L, index);
+}
+
+typedef int (*lua_toboolean)(void *L, int index);
+int lua_toboolean_wrap(void *f, void *L, int index)
+{
+    return ((lua_toboolean)f)(L, index);
+}
+
 typedef int (*lua_gettop)(void *L);
 int lua_gettop_wrap(void *f, void *L)
 {
     return ((lua_gettop)f)(L);
+}
+
+typedef int (*lua_type)(void *L, int index);
+int lua_type_wrap(void *f, void *L, int index)
+{
+    return ((lua_type)f)(L, index);
+}
+
+typedef const char *(*lua_typename)(void *L, int tp);
+const char *lua_typename_wrap(void *f, void *L, int tp)
+{
+    return ((lua_typename)f)(L, tp);
 }
 
 typedef void (*lua_pushcclosure)(void *L, int *fn, int n);

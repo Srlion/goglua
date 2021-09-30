@@ -63,14 +63,34 @@ var luaL_loadstring = C.dlsym(handler, CStr("luaL_loadstring").c)
 var luaL_loadbuffer = C.dlsym(handler, CStr("luaL_loadbuffer").c)
 var lua_pushlstring = C.dlsym(handler, CStr("lua_pushlstring").c)
 var lua_tolstring = C.dlsym(handler, CStr("lua_tolstring").c)
+var lua_tonumber = C.dlsym(handler, CStr("lua_tonumber").c)
+var lua_toboolean = C.dlsym(handler, CStr("lua_toboolean").c)
 var lua_gettop = C.dlsym(handler, CStr("lua_gettop").c)
+var lua_type = C.dlsym(handler, CStr("lua_type").c)
+var lua_typename = C.dlsym(handler, CStr("lua_typename").c)
 
 var lua_pushcclosure = C.dlsym(handler, CStr("lua_pushcclosure").c)
 var lua_pcall = C.dlsym(handler, CStr("lua_pcall").c)
 var lua_call = C.dlsym(handler, CStr("lua_call").c)
 var lua_setfield = C.dlsym(handler, CStr("lua_setfield").c)
 
-const LUA_GLOBALSINDEX = C.int(-10002)
+const LUA_MULTRET = -1
+
+const LUA_REGISTRYINDEX = -10000
+const LUA_ENVIRONINDEX = -10001
+const LUA_GLOBALSINDEX = -10002
+
+const LUA_TNONE = -1
+
+const LUA_TNIL = 0
+const LUA_TBOOLEAN = 1
+const LUA_TLIGHTUSERDATA = 2
+const LUA_TNUMBER = 3
+const LUA_TSTRING = 4
+const LUA_TTABLE = 5
+const LUA_TFUNCTION = 6
+const LUA_TUSERDATA = 7
+const LUA_TTHREAD = 8
 
 func NewState() State {
 	state := C.luaL_newstate_wrap(luaL_newstate)
@@ -101,6 +121,14 @@ func GetTop(L State) int {
 	return int(C.lua_gettop_wrap(lua_gettop, L))
 }
 
+func GetType(L State, index int) int {
+	return int(C.lua_type_wrap(lua_type, L, C.int(index)))
+}
+
+func GetTypeName(L State, tp int) string {
+	return C.GoString(C.lua_typename_wrap(lua_typename, L, C.int(tp)))
+}
+
 func PushString(L State, str string) {
 	C.lua_pushlstring_wrap(lua_pushlstring, L, CStr(str).c, C.size_t(len(str)))
 }
@@ -109,8 +137,16 @@ func PushFunc(L State, f unsafe.Pointer) {
 	C.lua_pushcclosure_wrap(lua_pushcclosure, L, (*C.int)(f), 0)
 }
 
-func ToLString(L State, index int) string {
+func GetString(L State, index int) string {
 	return C.GoString(C.lua_tolstring_wrap(lua_tolstring, L, C.int(index), nil))
+}
+
+func GetNumber(L State, index int) float64 {
+	return float64(C.lua_tonumber_wrap(lua_tonumber, L, C.int(index)))
+}
+
+func GetBool(L State, index int) bool {
+	return C.lua_toboolean_wrap(lua_toboolean, L, C.int(index)) == 1
 }
 
 func PCall(L State, nargs, nresults, errfunc int) int {
@@ -126,5 +162,24 @@ func SetGlobal(L State, name string) {
 }
 
 func GetErrorString(L State) string {
-	return ToLString(L, -1)
+	return GetString(L, -1)
+}
+
+func DumpStack(L State) {
+	top := GetTop(L)
+	fmt.Printf("=== Stack size: %v ===\n", top)
+	for i := 1; i < top; i++ {
+		t := GetType(L, i)
+		switch t {
+		case LUA_TSTRING:
+			fmt.Printf("(string) %v: %v\n", i, GetString(L, i))
+		case LUA_TNUMBER:
+			fmt.Printf("(number) %v: %v\n", i, GetNumber(L, i))
+		case LUA_TBOOLEAN:
+			fmt.Printf("(bool) %v: %v\n", i, GetBool(L, i))
+		default:
+			fmt.Printf("%v: %v:\n", i, GetTypeName(L, i))
+		}
+	}
+	println("===")
 }
