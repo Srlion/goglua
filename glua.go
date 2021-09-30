@@ -90,7 +90,7 @@ func LoadString(L State, str string) error {
 }
 
 func LoadBuffer(L State, buf []byte, name string) error {
-	if lua_error_code := C.luaL_loadbuffer_wrap(luaL_loadbuffer, L, (*C.char)(unsafe.Pointer(&buf)), C.size_t(len(buf)), CStr(name).c); lua_error_code != 0 {
+	if lua_error_code := C.luaL_loadbuffer_wrap(luaL_loadbuffer, L, (*C.char)(unsafe.Pointer(&buf[0])), C.size_t(len(buf)), CStr(name).c); lua_error_code != 0 {
 		return errors.New(GetErrorString(L))
 	}
 
