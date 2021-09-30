@@ -11,18 +11,19 @@ import (
 	"unsafe"
 )
 
-type LuaString struct {
-	C *C.char
+// free the c char when gc cycle happens
+type CString struct {
+	c *C.char
 }
 
-func (s *LuaString) Free() {
-	C.free(unsafe.Pointer(s.C))
+func (cstr *CString) free() {
+	C.free(unsafe.Pointer(cstr.c))
 }
 
-func CStr(gs string) *LuaString {
-	s := &LuaString{C.CString(gs)}
-	runtime.SetFinalizer(s, (*LuaString).Free)
-	return s
+func CStr(gs string) *CString {
+	cstr := &CString{C.CString(gs)}
+	runtime.SetFinalizer(cstr, (*CString).free)
+	return cstr
 }
 
 type State = unsafe.Pointer
@@ -43,29 +44,29 @@ var handler unsafe.Pointer = func() unsafe.Pointer {
 
 	for i := 0; i < len(paths); i++ {
 		if handler == nil {
-			handler = C.dlopen(CStr(paths[i]).C, C.RTLD_LAZY)
+			handler = C.dlopen(CStr(paths[i]).c, C.RTLD_LAZY)
 		} else {
 			break
 		}
 	}
 
 	if handler == nil {
-		panic(fmt.Sprintf("Error: %s", C.GoString(C.dlerror())))
+		panic(fmt.Sprintf("%s", C.GoString(C.dlerror())))
 	}
 
 	return handler
 }()
-var luaL_newstate = C.dlsym(handler, CStr("luaL_newstate").C)
-var luaL_openlibs = C.dlsym(handler, CStr("luaL_openlibs").C)
-var luaL_loadstring = C.dlsym(handler, CStr("luaL_loadstring").C)
-var lua_pushlstring = C.dlsym(handler, CStr("lua_pushlstring").C)
-var lua_tolstring = C.dlsym(handler, CStr("lua_tolstring").C)
-var lua_gettop = C.dlsym(handler, CStr("lua_gettop").C)
+var luaL_newstate = C.dlsym(handler, CStr("luaL_newstate").c)
+var luaL_openlibs = C.dlsym(handler, CStr("luaL_openlibs").c)
+var luaL_loadstring = C.dlsym(handler, CStr("luaL_loadstring").c)
+var lua_pushlstring = C.dlsym(handler, CStr("lua_pushlstring").c)
+var lua_tolstring = C.dlsym(handler, CStr("lua_tolstring").c)
+var lua_gettop = C.dlsym(handler, CStr("lua_gettop").c)
 
-var lua_pushcclosure = C.dlsym(handler, CStr("lua_pushcclosure").C)
-var lua_pcall = C.dlsym(handler, CStr("lua_pcall").C)
-var lua_call = C.dlsym(handler, CStr("lua_call").C)
-var lua_setfield = C.dlsym(handler, CStr("lua_setfield").C)
+var lua_pushcclosure = C.dlsym(handler, CStr("lua_pushcclosure").c)
+var lua_pcall = C.dlsym(handler, CStr("lua_pcall").c)
+var lua_call = C.dlsym(handler, CStr("lua_call").c)
+var lua_setfield = C.dlsym(handler, CStr("lua_setfield").c)
 
 const LUA_GLOBALSINDEX = C.int(-10002)
 
@@ -79,7 +80,7 @@ func OpenLibs(L State) {
 }
 
 func LoadString(L State, str string) error {
-	if lua_error_code := C.luaL_loadstring_wrap(luaL_loadstring, L, CStr(str).C); lua_error_code != 0 {
+	if lua_error_code := C.luaL_loadstring_wrap(luaL_loadstring, L, CStr(str).c); lua_error_code != 0 {
 		return fmt.Errorf(errorString(L))
 	}
 
@@ -91,7 +92,7 @@ func GetTop(L State) int {
 }
 
 func PushString(L State, str string) {
-	C.lua_pushlstring_wrap(lua_pushlstring, L, CStr(str).C, C.size_t(len(str)))
+	C.lua_pushlstring_wrap(lua_pushlstring, L, CStr(str).c, C.size_t(len(str)))
 }
 
 func PushFunc(L State, f unsafe.Pointer) {
@@ -111,7 +112,7 @@ func Call(L State, nargs int, nresults int) {
 }
 
 func SetGlobal(L State, name string) {
-	C.lua_setfield_wrap(lua_setfield, L, LUA_GLOBALSINDEX, CStr(name).C)
+	C.lua_setfield_wrap(lua_setfield, L, LUA_GLOBALSINDEX, CStr(name).c)
 }
 
 func errorString(L State) string {

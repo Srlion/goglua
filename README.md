@@ -2,4 +2,4 @@
 
 ## Install
 
-`go get -u https://github.com/Srlion/goglua`
+`go get -u github.com/Srlion/goglua`
