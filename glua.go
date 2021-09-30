@@ -172,11 +172,11 @@ func DumpStack(L State) {
 		t := GetType(L, i)
 		switch t {
 		case LUA_TSTRING:
-			fmt.Printf("(string) %v: %v\n", i, GetString(L, i))
+			fmt.Printf("(string) %v => %q\n", i, GetString(L, i))
 		case LUA_TNUMBER:
-			fmt.Printf("(number) %v: %v\n", i, GetNumber(L, i))
+			fmt.Printf("(number) %v => %v\n", i, GetNumber(L, i))
 		case LUA_TBOOLEAN:
-			fmt.Printf("(bool) %v: %v\n", i, GetBool(L, i))
+			fmt.Printf("(bool) %v => %v\n", i, GetBool(L, i))
 		default:
 			fmt.Printf("%v: %v:\n", i, GetTypeName(L, i))
 		}
